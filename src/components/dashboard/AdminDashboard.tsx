@@ -16,11 +16,45 @@ import {
   MessageSquare,
   BarChart3
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { SHOP_NAMES } from '@/types/business';
 
 export const AdminDashboard: React.FC = () => {
   const { user, users, assignEmployeeToShop, deleteUser } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const { toast } = useToast();
+
+  // Export functionality
+  const exportToExcel = (data: any[], filename: string) => {
+    if (data.length === 0) {
+      toast({
+        title: "No Data to Export",
+        description: "There is no data available to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const csvContent = [
+      Object.keys(data[0]).join(','),
+      ...data.map(row => Object.values(row).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${filename}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export Successful",
+      description: `${filename} has been downloaded.`,
+    });
+  };
 
   const employees = users.filter(u => u.role === 'employee');
   const unassignedEmployees = employees.filter(e => !e.assignedShop);
@@ -306,21 +340,68 @@ export const AdminDashboard: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button variant="gradient" className="h-20 flex-col">
+                <Button 
+                  variant="gradient" 
+                  className="h-20 flex-col"
+                  onClick={() => {
+                    const boutiqueEmployees = employees.filter(e => e.assignedShop === 'boutique');
+                    exportToExcel(boutiqueEmployees.map(e => ({
+                      name: e.fullName,
+                      nationalId: e.nationalId,
+                      shop: 'Boutique',
+                      assignedDate: new Date().toISOString().split('T')[0]
+                    })), 'boutique-employees');
+                  }}
+                >
                   <Download className="h-6 w-6 mb-2" />
                   Export Boutique Data
                 </Button>
-                <Button variant="secondary" className="h-20 flex-col">
+                <Button 
+                  variant="secondary" 
+                  className="h-20 flex-col"
+                  onClick={() => {
+                    const houseDecorEmployees = employees.filter(e => e.assignedShop === 'house-decor');
+                    exportToExcel(houseDecorEmployees.map(e => ({
+                      name: e.fullName,
+                      nationalId: e.nationalId,
+                      shop: 'House Décor',
+                      assignedDate: new Date().toISOString().split('T')[0]
+                    })), 'house-decor-employees');
+                  }}
+                >
                   <Download className="h-6 w-6 mb-2" />
                   Export House Décor Data
                 </Button>
-                <Button variant="accent" className="h-20 flex-col">
+                <Button 
+                  variant="accent" 
+                  className="h-20 flex-col"
+                  onClick={() => {
+                    exportToExcel(employees.map(e => ({
+                      name: e.fullName,
+                      nationalId: e.nationalId,
+                      role: e.role,
+                      assignedShop: e.assignedShop || 'Unassigned'
+                    })), 'employees-summary');
+                  }}
+                >
                   <BarChart3 className="h-6 w-6 mb-2" />
-                  Sales Summary
+                  Employee Summary
                 </Button>
-                <Button variant="outline" className="h-20 flex-col">
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col"
+                  onClick={() => {
+                    const allUsers = users.map(u => ({
+                      name: u.fullName,
+                      nationalId: u.nationalId,
+                      role: u.role,
+                      assignedShop: u.assignedShop || 'N/A'
+                    }));
+                    exportToExcel(allUsers, 'all-users-report');
+                  }}
+                >
                   <Package className="h-6 w-6 mb-2" />
-                  Stock Report
+                  Users Report
                 </Button>
               </div>
             </CardContent>
