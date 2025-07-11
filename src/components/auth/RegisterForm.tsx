@@ -17,7 +17,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     fullName: '',
-    nationalId: '',
+    email: '',
     role: '' as 'admin' | 'employee' | '',
     password: '',
     confirmPassword: ''
@@ -52,7 +52,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
     try {
       const success = await register({
         fullName: formData.fullName,
-        nationalId: formData.nationalId,
+        email: formData.email,
         role: formData.role,
         password: formData.password
       });
@@ -66,7 +66,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
         });
         setFormData({
           fullName: '',
-          nationalId: '',
+          email: '',
           role: '' as any,
           password: '',
           confirmPassword: ''
@@ -115,14 +115,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="nationalId">National ID Number</Label>
+            <Label htmlFor="email">Email Address</Label>
             <Input
-              id="nationalId"
-              type="text"
-              value={formData.nationalId}
-              onChange={(e) => setFormData({ ...formData, nationalId: e.target.value })}
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
-              placeholder="Enter your National ID"
+              placeholder="Enter your email"
             />
           </div>
 

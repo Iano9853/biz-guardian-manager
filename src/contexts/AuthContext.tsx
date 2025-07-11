@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, AuthState } from '@/types/auth';
+import { supabase } from '@/integrations/supabase/client';
+import { AuthState, UserProfile } from '@/types/auth';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AuthContextType extends AuthState {
-  login: (nationalId: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   register: (userData: {
     fullName: string;
-    nationalId: string;
+    email: string;
     role: 'admin' | 'employee';
     password: string;
   }) => Promise<boolean>;
@@ -27,125 +29,184 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
+    profile: null,
+    session: null,
     isAuthenticated: false,
     users: []
   });
 
-  // Load data from localStorage
-  useEffect(() => {
-    const storedUsers = localStorage.getItem('bizapp_users');
-    const storedCurrentUser = localStorage.getItem('bizapp_current_user');
+  // Load users for admin dashboard
+  const loadUsers = async () => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*');
     
-    if (storedUsers) {
-      const users = JSON.parse(storedUsers);
-      setAuthState(prev => ({ ...prev, users }));
+    if (!error && data) {
+      setAuthState(prev => ({ ...prev, users: data as UserProfile[] }));
     }
-    
-    if (storedCurrentUser) {
-      const user = JSON.parse(storedCurrentUser);
-      setAuthState(prev => ({ ...prev, user, isAuthenticated: true }));
-    }
-  }, []);
-
-  // Save users to localStorage
-  const saveUsers = (users: User[]) => {
-    localStorage.setItem('bizapp_users', JSON.stringify(users));
   };
 
-  const login = async (nationalId: string, password: string): Promise<boolean> => {
-    const storedPasswordsJson = localStorage.getItem('bizapp_passwords');
-    const storedPasswords = storedPasswordsJson ? JSON.parse(storedPasswordsJson) : {};
-    
-    if (!storedPasswords[nationalId]) {
+  // Set up auth state listener
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setAuthState(prev => ({ ...prev, session }));
+        
+        if (session?.user) {
+          // Fetch user profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          setAuthState(prev => ({
+            ...prev,
+            user: session.user,
+            profile: profile as UserProfile,
+            isAuthenticated: true
+          }));
+          
+          // Load all users for admin functionality
+          await loadUsers();
+        } else {
+          setAuthState(prev => ({
+            ...prev,
+            user: null,
+            profile: null,
+            isAuthenticated: false
+          }));
+        }
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setAuthState(prev => ({ ...prev, session }));
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) return false;
+
+      // Check if employee is assigned to a shop
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile?.role === 'employee' && !profile.assigned_shop) {
+          await supabase.auth.signOut();
+          return false; // Employee not assigned to shop
+        }
+      }
+
+      return true;
+    } catch (error) {
       return false;
     }
-
-    // Simple password check (in production, use proper hashing)
-    if (storedPasswords[nationalId] !== password) {
-      return false;
-    }
-
-    const user = authState.users.find(u => u.nationalId === nationalId);
-    if (!user) {
-      return false;
-    }
-
-    // Check if employee is assigned to a shop
-    if (user.role === 'employee' && !user.assignedShop) {
-      return false; // Employee not assigned to shop
-    }
-
-    localStorage.setItem('bizapp_current_user', JSON.stringify(user));
-    setAuthState(prev => ({ ...prev, user, isAuthenticated: true }));
-    return true;
   };
 
   const register = async (userData: {
     fullName: string;
-    nationalId: string;
+    email: string;
     role: 'admin' | 'employee';
     password: string;
   }): Promise<boolean> => {
-    // Check if user already exists
-    if (authState.users.find(u => u.nationalId === userData.nationalId)) {
+    try {
+      // Check admin limit
+      if (userData.role === 'admin') {
+        const { data: adminProfiles } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('role', 'admin');
+        
+        if (adminProfiles && adminProfiles.length >= 3) {
+          return false;
+        }
+      }
+
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: userData.fullName,
+            role: userData.role
+          }
+        }
+      });
+
+      if (error) return false;
+      return true;
+    } catch (error) {
       return false;
     }
+  };
 
-    // Check admin limit
-    if (userData.role === 'admin') {
-      const adminCount = authState.users.filter(u => u.role === 'admin').length;
-      if (adminCount >= 3) {
-        return false;
+  const logout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const assignEmployeeToShop = async (employeeId: string, shop: 'boutique' | 'house-decor') => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ assigned_shop: shop })
+        .eq('id', employeeId);
+
+      if (!error) {
+        // Reload users to reflect changes
+        await loadUsers();
+        
+        // Update current profile if it's the assigned employee
+        if (authState.user?.id === employeeId) {
+          const { data: updatedProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', employeeId)
+            .single();
+          
+          if (updatedProfile) {
+            setAuthState(prev => ({ ...prev, profile: updatedProfile as UserProfile }));
+          }
+        }
       }
-    }
-
-    const newUser: User = {
-      id: Date.now().toString(),
-      fullName: userData.fullName,
-      nationalId: userData.nationalId,
-      role: userData.role,
-      createdAt: new Date().toISOString()
-    };
-
-    const updatedUsers = [...authState.users, newUser];
-    
-    // Store password separately (in production, hash it properly)
-    const storedPasswordsJson = localStorage.getItem('bizapp_passwords');
-    const storedPasswords = storedPasswordsJson ? JSON.parse(storedPasswordsJson) : {};
-    storedPasswords[userData.nationalId] = userData.password;
-    localStorage.setItem('bizapp_passwords', JSON.stringify(storedPasswords));
-    
-    saveUsers(updatedUsers);
-    setAuthState(prev => ({ ...prev, users: updatedUsers }));
-    
-    return true;
-  };
-
-  const logout = () => {
-    localStorage.removeItem('bizapp_current_user');
-    setAuthState(prev => ({ ...prev, user: null, isAuthenticated: false }));
-  };
-
-  const assignEmployeeToShop = (employeeId: string, shop: 'boutique' | 'house-decor') => {
-    const updatedUsers = authState.users.map(user =>
-      user.id === employeeId ? { ...user, assignedShop: shop } : user
-    );
-    
-    saveUsers(updatedUsers);
-    setAuthState(prev => ({ ...prev, users: updatedUsers }));
-    
-    // Update current user if it's the assigned employee
-    if (authState.user?.id === employeeId) {
-      const updatedUser = { ...authState.user, assignedShop: shop };
-      localStorage.setItem('bizapp_current_user', JSON.stringify(updatedUser));
-      setAuthState(prev => ({ ...prev, user: updatedUser }));
+    } catch (error) {
+      console.error('Error assigning employee to shop:', error);
     }
   };
 
-  const deleteUser = (userId: string) => {
-    const updatedUsers = authState.users.filter(user => user.id !== userId);
-    saveUsers(updatedUsers);
-    setAuthState(prev => ({ ...prev, users: updatedUsers }));
+  const deleteUser = async (userId: string) => {
+    try {
+      // Note: In production, you'd want to handle this through a secure admin function
+      // For now, we'll just remove from profiles table
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (!error) {
+        await loadUsers();
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
   };
 
   return (

@@ -7,15 +7,15 @@ import { Footer } from '@/components/layout/Footer';
 import { JosephineChat } from '@/components/ai/JosephineChat';
 
 export const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
-  if (!user) return null;
+  if (!user || !profile) return null;
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container mx-auto px-4 py-6">
-        {user.role === 'admin' ? <AdminDashboard /> : <EmployeeDashboard />}
+        {profile.role === 'admin' ? <AdminDashboard /> : <EmployeeDashboard />}
       </main>
       <Footer />
       <JosephineChat />

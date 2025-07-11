@@ -14,7 +14,7 @@ interface LoginFormProps {
 export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
   const { login } = useAuth();
   const { toast } = useToast();
-  const [nationalId, setNationalId] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -24,7 +24,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
     setIsLoading(true);
 
     try {
-      const success = await login(nationalId, password);
+      const success = await login(email, password);
       if (!success) {
         toast({
           title: "Login Failed",
@@ -53,14 +53,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="nationalId">National ID Number</Label>
+            <Label htmlFor="email">Email Address</Label>
             <Input
-              id="nationalId"
-              type="text"
-              value={nationalId}
-              onChange={(e) => setNationalId(e.target.value)}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="Enter your National ID"
+              placeholder="Enter your email"
             />
           </div>
           

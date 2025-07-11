@@ -1,14 +1,18 @@
-export interface User {
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+
+export interface UserProfile {
   id: string;
-  fullName: string;
-  nationalId: string;
+  full_name: string;
   role: 'admin' | 'employee';
-  assignedShop?: 'boutique' | 'house-decor';
-  createdAt: string;
+  assigned_shop?: 'boutique' | 'house-decor';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface AuthState {
-  user: User | null;
+  user: SupabaseUser | null;
+  profile: UserProfile | null;
+  session: Session | null;
   isAuthenticated: boolean;
-  users: User[];
+  users: UserProfile[];
 }
