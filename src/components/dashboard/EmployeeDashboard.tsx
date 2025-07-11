@@ -96,9 +96,9 @@ export const EmployeeDashboard: React.FC = () => {
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="stock">Stock</TabsTrigger>
-          <TabsTrigger value="sales">Sales</TabsTrigger>
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="stock" className="text-xs sm:text-sm">Stock</TabsTrigger>
+          <TabsTrigger value="sales" className="text-xs sm:text-sm">Sales</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">

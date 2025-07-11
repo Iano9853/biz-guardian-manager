@@ -131,11 +131,11 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="employees">Employees</TabsTrigger>
-          <TabsTrigger value="shops">Shops</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="employees" className="text-xs sm:text-sm">Employees</TabsTrigger>
+          <TabsTrigger value="shops" className="text-xs sm:text-sm">Shops</TabsTrigger>
+          <TabsTrigger value="reports" className="text-xs sm:text-sm">Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -159,20 +159,22 @@ export const AdminDashboard: React.FC = () => {
                           <p className="font-medium">{employee.fullName}</p>
                           <p className="text-sm text-muted-foreground">ID: {employee.nationalId}</p>
                         </div>
-                        <div className="flex space-x-2">
+                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => assignEmployeeToShop(employee.id, 'boutique')}
+                            className="text-xs sm:text-sm"
                           >
-                            Assign to Boutique
+                            → Boutique
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => assignEmployeeToShop(employee.id, 'house-decor')}
+                            className="text-xs sm:text-sm"
                           >
-                            Assign to House Décor
+                            → House Décor
                           </Button>
                         </div>
                       </div>
@@ -339,10 +341,10 @@ export const AdminDashboard: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Button 
                   variant="gradient" 
-                  className="h-20 flex-col"
+                  className="h-16 sm:h-20 flex-col text-xs sm:text-sm"
                   onClick={() => {
                     const boutiqueEmployees = employees.filter(e => e.assignedShop === 'boutique');
                     exportToExcel(boutiqueEmployees.map(e => ({
@@ -358,7 +360,7 @@ export const AdminDashboard: React.FC = () => {
                 </Button>
                 <Button 
                   variant="secondary" 
-                  className="h-20 flex-col"
+                  className="h-16 sm:h-20 flex-col text-xs sm:text-sm"
                   onClick={() => {
                     const houseDecorEmployees = employees.filter(e => e.assignedShop === 'house-decor');
                     exportToExcel(houseDecorEmployees.map(e => ({
@@ -374,7 +376,7 @@ export const AdminDashboard: React.FC = () => {
                 </Button>
                 <Button 
                   variant="accent" 
-                  className="h-20 flex-col"
+                  className="h-16 sm:h-20 flex-col text-xs sm:text-sm"
                   onClick={() => {
                     exportToExcel(employees.map(e => ({
                       name: e.fullName,
@@ -389,7 +391,7 @@ export const AdminDashboard: React.FC = () => {
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="h-20 flex-col"
+                  className="h-16 sm:h-20 flex-col text-xs sm:text-sm"
                   onClick={() => {
                     const allUsers = users.map(u => ({
                       name: u.fullName,

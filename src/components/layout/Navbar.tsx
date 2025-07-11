@@ -19,8 +19,9 @@ export const Navbar: React.FC = () => {
     <nav className="bg-background border-b border-border px-4 py-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Biz Guardian Manager
+          <h1 className="text-lg sm:text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <span className="hidden sm:inline">Biz Guardian Manager</span>
+            <span className="sm:hidden">BizGuardian</span>
           </h1>
           <Badge variant="secondary" className="hidden sm:inline-flex">
             Powered by Josephine AI
