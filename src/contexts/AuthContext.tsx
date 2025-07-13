@@ -97,7 +97,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password
       });
 
-      if (error) return false;
+      if (error) {
+        console.error('Login error:', error.message);
+        // Check for common error types
+        if (error.message.includes('Invalid login credentials')) {
+          // This could be due to email not confirmed
+          console.log('Login failed - check if email is confirmed');
+        }
+        return false;
+      }
 
       // Check if employee is assigned to a shop
       if (data.user) {
@@ -109,12 +117,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (profile?.role === 'employee' && !profile.assigned_shop) {
           await supabase.auth.signOut();
+          console.log('Employee not assigned to shop');
           return false; // Employee not assigned to shop
         }
       }
 
       return true;
     } catch (error) {
+      console.error('Login error:', error);
       return false;
     }
   };
@@ -194,16 +204,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const deleteUser = async (userId: string) => {
     try {
-      // Note: In production, you'd want to handle this through a secure admin function
-      // For now, we'll just remove from profiles table
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
-
-      if (!error) {
-        await loadUsers();
+      // Use the Edge Function to delete user with proper admin privileges
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        console.error('No active session');
+        return;
       }
+
+      const response = await fetch('https://awwzombzlpogjhstwdmx.supabase.co/functions/v1/delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('Error deleting user:', result.error);
+        return;
+      }
+
+      // Reload users to reflect changes
+      await loadUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
     }
