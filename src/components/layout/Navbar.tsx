@@ -7,7 +7,7 @@ import { LogOut, User, MessageCircle } from 'lucide-react';
 import { SHOP_NAMES } from '@/types/business';
 
 export const Navbar: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
 
   if (!user) return null;
 
@@ -33,18 +33,18 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center space-x-3">
             <Avatar>
               <AvatarFallback className="bg-primary text-primary-foreground">
-                {getInitials(user.fullName)}
+                {getInitials(profile?.full_name || 'User')}
               </AvatarFallback>
             </Avatar>
             <div className="hidden md:block">
-              <p className="text-sm font-medium">{user.fullName}</p>
+              <p className="text-sm font-medium">{profile?.full_name}</p>
               <div className="flex items-center space-x-2">
-                <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                  {user.role === 'admin' ? '🧑‍💼 Admin' : '👷 Employee'}
+                <Badge variant={profile?.role === 'admin' ? 'default' : 'secondary'}>
+                  {profile?.role === 'admin' ? '🧑‍💼 Admin' : '👷 Employee'}
                 </Badge>
-                {user.assignedShop && (
+                {profile?.assigned_shop && (
                   <Badge variant="outline">
-                    {SHOP_NAMES[user.assignedShop]}
+                    {SHOP_NAMES[profile.assigned_shop]}
                   </Badge>
                 )}
               </div>

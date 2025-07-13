@@ -21,14 +21,14 @@ interface Message {
 }
 
 export const JosephineChat: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: `Hello ${user?.fullName}! I'm Josephine, your AI business assistant. How can I help you today?`,
+      content: `Hello ${profile?.full_name}! I'm Josephine, your AI business assistant. How can I help you today?`,
       sender: 'josephine',
       timestamp: new Date().toISOString()
     }
@@ -49,7 +49,7 @@ export const JosephineChat: React.FC = () => {
 
     // Simulate Josephine's response
     setTimeout(() => {
-      const response = getJosephineResponse(message, user?.role);
+      const response = getJosephineResponse(message, profile?.role);
       const josephineMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: response,

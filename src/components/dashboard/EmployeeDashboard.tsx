@@ -15,10 +15,10 @@ import {
 import { SHOP_NAMES } from '@/types/business';
 
 export const EmployeeDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
-  if (!user?.assignedShop) {
+  if (!profile?.assigned_shop) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card className="w-full max-w-md">
@@ -39,9 +39,9 @@ export const EmployeeDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="bg-gradient-primary text-primary-foreground rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-2">Welcome back, {user?.fullName}!</h2>
+        <h2 className="text-2xl font-bold mb-2">Welcome back, {profile?.full_name}!</h2>
         <p className="text-primary-foreground/80 mb-3">
-          Managing {SHOP_NAMES[user.assignedShop]}
+          Managing {SHOP_NAMES[profile.assigned_shop]}
         </p>
         <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground">
           Employee Access
@@ -115,7 +115,7 @@ export const EmployeeDashboard: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Assigned Shop</span>
                     <Badge variant="secondary">
-                      {SHOP_NAMES[user.assignedShop]}
+                      {SHOP_NAMES[profile.assigned_shop]}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
@@ -124,7 +124,7 @@ export const EmployeeDashboard: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Employee ID</span>
-                    <span className="text-sm font-mono">{user.nationalId}</span>
+                    <span className="text-sm font-mono">{profile.id}</span>
                   </div>
                 </div>
               </CardContent>
@@ -158,7 +158,7 @@ export const EmployeeDashboard: React.FC = () => {
         <TabsContent value="stock" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Current Stock - {SHOP_NAMES[user.assignedShop]}</CardTitle>
+              <CardTitle>Current Stock - {SHOP_NAMES[profile.assigned_shop]}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-center py-12">
@@ -201,7 +201,7 @@ export const EmployeeDashboard: React.FC = () => {
             <CardContent>
               <div className="text-center py-8">
                 <p className="text-muted-foreground">
-                  No sales recorded yet for {SHOP_NAMES[user.assignedShop]}
+                  No sales recorded yet for {SHOP_NAMES[profile.assigned_shop]}
                 </p>
               </div>
             </CardContent>

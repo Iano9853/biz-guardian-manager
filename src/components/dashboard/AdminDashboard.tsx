@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { SHOP_NAMES } from '@/types/business';
 
 export const AdminDashboard: React.FC = () => {
-  const { user, users, assignEmployeeToShop, deleteUser } = useAuth();
+  const { user, profile, users, assignEmployeeToShop, deleteUser } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
 
@@ -57,14 +57,14 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const employees = users.filter(u => u.role === 'employee');
-  const unassignedEmployees = employees.filter(e => !e.assignedShop);
+  const unassignedEmployees = employees.filter(e => !e.assigned_shop);
   const admins = users.filter(u => u.role === 'admin');
 
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="bg-gradient-primary text-primary-foreground rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-2">Welcome back, {user?.fullName}!</h2>
+        <h2 className="text-2xl font-bold mb-2">Welcome back, {profile?.full_name}!</h2>
         <p className="text-primary-foreground/80">
           Manage your business operations with full administrative control
         </p>
@@ -156,8 +156,8 @@ export const AdminDashboard: React.FC = () => {
                     {unassignedEmployees.map(employee => (
                       <div key={employee.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div>
-                          <p className="font-medium">{employee.fullName}</p>
-                          <p className="text-sm text-muted-foreground">ID: {employee.nationalId}</p>
+                          <p className="font-medium">{employee.full_name}</p>
+                          <p className="text-sm text-muted-foreground">ID: {employee.id}</p>
                         </div>
                         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                           <Button
@@ -226,25 +226,25 @@ export const AdminDashboard: React.FC = () => {
                   <div key={employee.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div>
-                        <p className="font-medium">{employee.fullName}</p>
-                        <p className="text-sm text-muted-foreground">ID: {employee.nationalId}</p>
+                        <p className="font-medium">{employee.full_name}</p>
+                        <p className="text-sm text-muted-foreground">ID: {employee.id}</p>
                       </div>
-                      {employee.assignedShop ? (
+                      {employee.assigned_shop ? (
                         <Badge variant="secondary">
-                          {SHOP_NAMES[employee.assignedShop]}
+                          {SHOP_NAMES[employee.assigned_shop]}
                         </Badge>
                       ) : (
                         <Badge variant="outline">Unassigned</Badge>
                       )}
                     </div>
                     <div className="flex space-x-2">
-                      {employee.assignedShop ? (
+                      {employee.assigned_shop ? (
                         <>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => assignEmployeeToShop(employee.id, 
-                              employee.assignedShop === 'boutique' ? 'house-decor' : 'boutique'
+                              employee.assigned_shop === 'boutique' ? 'house-decor' : 'boutique'
                             )}
                           >
                             Switch Shop
@@ -302,7 +302,7 @@ export const AdminDashboard: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Assigned Employees</span>
                     <Badge>
-                      {employees.filter(e => e.assignedShop === 'boutique').length}
+                      {employees.filter(e => e.assigned_shop === 'boutique').length}
                     </Badge>
                   </div>
                   <StockManager shop="boutique" isAdmin={true} />
@@ -322,7 +322,7 @@ export const AdminDashboard: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Assigned Employees</span>
                     <Badge>
-                      {employees.filter(e => e.assignedShop === 'house-decor').length}
+                      {employees.filter(e => e.assigned_shop === 'house-decor').length}
                     </Badge>
                   </div>
                   <StockManager shop="house-decor" isAdmin={true} />
@@ -346,10 +346,10 @@ export const AdminDashboard: React.FC = () => {
                   variant="gradient" 
                   className="h-16 sm:h-20 flex-col text-xs sm:text-sm"
                   onClick={() => {
-                    const boutiqueEmployees = employees.filter(e => e.assignedShop === 'boutique');
+                    const boutiqueEmployees = employees.filter(e => e.assigned_shop === 'boutique');
                     exportToExcel(boutiqueEmployees.map(e => ({
-                      name: e.fullName,
-                      nationalId: e.nationalId,
+                      name: e.full_name,
+                      id: e.id,
                       shop: 'Boutique',
                       assignedDate: new Date().toISOString().split('T')[0]
                     })), 'boutique-employees');
@@ -362,10 +362,10 @@ export const AdminDashboard: React.FC = () => {
                   variant="secondary" 
                   className="h-16 sm:h-20 flex-col text-xs sm:text-sm"
                   onClick={() => {
-                    const houseDecorEmployees = employees.filter(e => e.assignedShop === 'house-decor');
+                    const houseDecorEmployees = employees.filter(e => e.assigned_shop === 'house-decor');
                     exportToExcel(houseDecorEmployees.map(e => ({
-                      name: e.fullName,
-                      nationalId: e.nationalId,
+                      name: e.full_name,
+                      id: e.id,
                       shop: 'House Décor',
                       assignedDate: new Date().toISOString().split('T')[0]
                     })), 'house-decor-employees');
@@ -379,10 +379,10 @@ export const AdminDashboard: React.FC = () => {
                   className="h-16 sm:h-20 flex-col text-xs sm:text-sm"
                   onClick={() => {
                     exportToExcel(employees.map(e => ({
-                      name: e.fullName,
-                      nationalId: e.nationalId,
+                      name: e.full_name,
+                      id: e.id,
                       role: e.role,
-                      assignedShop: e.assignedShop || 'Unassigned'
+                      assignedShop: e.assigned_shop || 'Unassigned'
                     })), 'employees-summary');
                   }}
                 >
@@ -394,10 +394,10 @@ export const AdminDashboard: React.FC = () => {
                   className="h-16 sm:h-20 flex-col text-xs sm:text-sm"
                   onClick={() => {
                     const allUsers = users.map(u => ({
-                      name: u.fullName,
-                      nationalId: u.nationalId,
+                      name: u.full_name,
+                      id: u.id,
                       role: u.role,
-                      assignedShop: u.assignedShop || 'N/A'
+                      assignedShop: u.assigned_shop || 'N/A'
                     }));
                     exportToExcel(allUsers, 'all-users-report');
                   }}
